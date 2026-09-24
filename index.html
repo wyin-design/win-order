@@ -861,17 +861,23 @@ function loadOrders() {
 
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRMv9uFC74pM567LRwYysrAWrTzRMhLlFn6gdG0GuZmZIwlcBXEoH6gqIYOqHfojaL/exec';
 
+function sendToSheet(params) {
+  try {
+    var url = APPS_SCRIPT_URL + '?' + params;
+    var s = document.createElement('script');
+    s.src = url;
+    document.head.appendChild(s);
+    setTimeout(function(){ try { document.head.removeChild(s); } catch(e){} }, 5000);
+  } catch(e) { console.error('Sheet send failed', e); }
+}
+
 function saveOrder(order) {
   try {
     var orders = loadOrders();
     orders.unshift(order);
     localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
   } catch(e) { console.error('Order save failed', e); }
-  try {
-    var url = APPS_SCRIPT_URL + '?action=new&data=' + encodeURIComponent(JSON.stringify(order));
-    var img = new Image();
-    img.src = url;
-  } catch(e) { console.error('Sheet send failed', e); }
+  sendToSheet('action=new&data=' + encodeURIComponent(JSON.stringify(order)));
 }
 
 function updateOrderStatus(id, status) {
@@ -881,11 +887,7 @@ function updateOrderStatus(id, status) {
     if (o) { o.status = status; o.paidAt = new Date().toISOString(); }
     localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
   } catch(e) {}
-  try {
-    var url = APPS_SCRIPT_URL + '?action=status&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status);
-    var img = new Image();
-    img.src = url;
-  } catch(e) { console.error('Status update failed', e); }
+  sendToSheet('action=status&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status));
 }
 
 function deleteOrder(id) {
