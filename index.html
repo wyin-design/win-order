@@ -293,6 +293,14 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
         <label class="form-label">備考</label>
         <textarea id="f-note" class="form-textarea" placeholder="特記事項など"></textarea>
       </div>
+      <div class="form-row form-full" style="margin-top:4px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:10px;color:var(--text);letter-spacing:.04em;line-height:1.6">
+          <input type="checkbox" id="f-receipt" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:#111;cursor:pointer">
+          <span>領収書を希望する<br>
+            <span style="font-size:9px;color:var(--muted)">クレジットカードのお支払いにつきましては、カードご利用控えを領収書とさせていただきます。別途領収書をご希望の場合は、後日メールにて発行・送付いたします。</span>
+          </span>
+        </label>
+      </div>
     </div>
   </div>
 </div>
@@ -357,13 +365,13 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
         disabled>
         注文を確定する
       </button>
-      <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.7;letter-spacing:.04em">
-        注文確定後、スタッフにお声がけいただき、クレジット決済をクレジット端末でお済ませください。
+      <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.7;letter-spacing:.04em" id="customer-order-note">
+        注文確定後、スタッフへお声がけいただき、レジでクレジット決済へお進みください。
       </div>
       <div id="customer-order-done" style="display:none;text-align:center;padding:16px 0;
         font-size:11px;letter-spacing:.1em;color:#1a6e3c">
         ✓ ご注文を受け付けました<br>
-        <span style="font-size:10px;color:var(--muted)">スタッフにお声がけいただきクレジット決済をお済ませください</span>
+        <span id="customer-order-done-msg" style="font-size:10px;color:var(--muted)">スタッフへお声がけいただき、レジでクレジット決済へお進みください</span>
       </div>
     </div>
 
@@ -632,12 +640,16 @@ function updateCartCount() {
 function openCart() {
   document.getElementById('cart-overlay').classList.add('open');
   document.getElementById('cart-drawer').classList.add('open');
+  var sib = document.getElementById('scroll-to-info-btn');
+  if (sib) sib.style.display = 'none';
   renderCart();
 }
 
 function closeCart() {
   document.getElementById('cart-overlay').classList.remove('open');
   document.getElementById('cart-drawer').classList.remove('open');
+  var sib = document.getElementById('scroll-to-info-btn');
+  if (sib) sib.style.display = '';
 }
 
 function renderCart() {
@@ -704,6 +716,13 @@ function setShipping(mode) {
   document.getElementById('ship-delivery').className = 'ship-opt' + (mode==='delivery'?' active-delivery':'');
   document.getElementById('ship-cod').className = 'ship-opt' + (mode==='cod'?' active-cod':'');
   if (cart.length > 0) renderTotals();
+  // ボタン下メモ更新
+  var note = document.getElementById('customer-order-note');
+  if (note) {
+    note.textContent = mode === 'cod'
+      ? '注文確定後、商品の到着までお待ちください。'
+      : '注文確定後、スタッフへお声がけいただき、レジでクレジット決済へお進みください。';
+  }
 }
 
 // ===== PRINT =====
@@ -845,7 +864,12 @@ function customerOrder() {
   var name = document.getElementById('f-name').value.trim();
   if (!name) { showToast('お名前をご入力ください'); return; }
   if (cart.length === 0) { showToast('商品を追加してください'); return; }
-  if (!confirm('注文内容を確定しますか？\n\n後ほどスタッフよりご連絡いたします。')) return;
+
+  var isCod = shipping === 'cod';
+  var confirmMsg = isCod
+    ? '注文内容を確定しますか？\n\nご注文を受け付けます。商品の到着までお待ちください。'
+    : '注文内容を確定しますか？\n\nスタッフへお声がけいただき、レジでクレジット決済へお進みください。';
+  if (!confirm(confirmMsg)) return;
 
   var retailTotal = cart.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
   var disc = Math.round(retailTotal * 0.3);
@@ -856,6 +880,11 @@ function customerOrder() {
   var finalPay = pay + tax + shipFee + codFee;
   var shippingLabel = shipping === 'pickup' ? '店頭お持ち帰り' : (shipping === 'cod' ? '代引き配送' : '決済後配送');
 
+  // 領収書チェックを備考に付記
+  var noteVal = document.getElementById('f-note').value.trim();
+  var wantsReceipt = document.getElementById('f-receipt') && document.getElementById('f-receipt').checked;
+  if (wantsReceipt) noteVal = noteVal ? noteVal + '　【領収書希望】' : '【領収書希望】';
+
   var order = {
     id: 'ord-' + Date.now(),
     createdAt: new Date().toISOString(),
@@ -864,7 +893,7 @@ function customerOrder() {
     email: document.getElementById('f-email').value.trim(),
     tel: document.getElementById('f-tel').value.trim(),
     address: document.getElementById('f-address').value.trim(),
-    note: document.getElementById('f-note').value.trim(),
+    note: noteVal,
     shipping: shippingLabel,
     items: cart.map(function(i){ return {name:i.name, size:i.size, qty:i.qty, price:i.price}; }),
     retailTotal: retailTotal,
@@ -878,7 +907,14 @@ function customerOrder() {
 
   saveOrder(order);
 
-  // ボタンを非表示にして完了メッセージを表示
+  // 完了メッセージを配送方法で変える
+  var doneMsg = document.getElementById('customer-order-done-msg');
+  if (doneMsg) {
+    doneMsg.textContent = isCod
+      ? '商品の到着までお待ちください。'
+      : 'スタッフへお声がけいただき、レジでクレジット決済へお進みください。';
+  }
+  document.getElementById('customer-order-note').style.display = 'none';
   document.getElementById('customer-order-btn').style.display = 'none';
   document.getElementById('customer-order-done').style.display = 'block';
   showToast('ご注文を受け付けました');
@@ -1037,7 +1073,8 @@ function fetchOrdersFromSheet() {
 }
 
 function renderOrdersPanelSheet(rows) {
-  document.getElementById('orders-count').textContent = rows.length + ' 件';
+  var grandTotal = rows.reduce(function(s,r){ return s + (Number(r.total)||0); }, 0);
+  document.getElementById('orders-count').textContent = rows.length + ' 件　合計 ' + yen(grandTotal);
   var body = document.getElementById('orders-body');
   body.innerHTML = rows.map(function(r) {
     var isPaid = r.status === '入金済み';
@@ -1075,16 +1112,31 @@ function renderOrdersPanelSheet(rows) {
 }
 
 function markPaidSheet(id) {
-  if (!confirm('入金済みにしますか？')) return;
+  if (!confirm('入金済み確認完了にしますか？\nカートとフォームもリセットされます。')) return;
   var btn = document.getElementById('mpb-' + id);
   if (btn) { btn.disabled = true; btn.textContent = '更新中...'; }
   updateOrderStatus(id, 'paid');
   showToast('入金済みに更新しました');
+  // カート・フォームをリセット
+  cart = [];
+  updateCartCount();
+  renderTotals();
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-tel').value = '';
+  document.getElementById('f-address').value = '';
+  document.getElementById('f-note').value = '';
+  if (document.getElementById('f-receipt')) document.getElementById('f-receipt').checked = false;
+  document.getElementById('customer-order-btn').style.display = '';
+  document.getElementById('customer-order-btn').disabled = true;
+  document.getElementById('customer-order-done').style.display = 'none';
+  document.getElementById('customer-order-note').style.display = '';
   setTimeout(function() { fetchOrdersFromSheet(); }, 3000);
 }
 
 function renderOrdersPanel(orders) {
-  document.getElementById('orders-count').textContent = orders.length + ' 件';
+  var grandTotal = orders.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
+  document.getElementById('orders-count').textContent = orders.length + ' 件　合計 ' + yen(grandTotal);
   var body = document.getElementById('orders-body');
   if (orders.length === 0) {
     body.innerHTML = '<div class="orders-empty">受注データがありません</div>';
