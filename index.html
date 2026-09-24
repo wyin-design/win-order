@@ -869,7 +869,8 @@ function saveOrder(order) {
   } catch(e) { console.error('Order save failed', e); }
   try {
     var url = APPS_SCRIPT_URL + '?action=new&data=' + encodeURIComponent(JSON.stringify(order));
-    fetch(url, { method: 'GET', mode: 'no-cors' });
+    var img = new Image();
+    img.src = url;
   } catch(e) { console.error('Sheet send failed', e); }
 }
 
@@ -882,7 +883,8 @@ function updateOrderStatus(id, status) {
   } catch(e) {}
   try {
     var url = APPS_SCRIPT_URL + '?action=status&id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status);
-    fetch(url, { method: 'GET', mode: 'no-cors' });
+    var img = new Image();
+    img.src = url;
   } catch(e) { console.error('Status update failed', e); }
 }
 
