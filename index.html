@@ -1114,7 +1114,9 @@ function renderOrdersPanelSheet(rows) {
 function resetCartAndForm() {
   cart = [];
   updateCartCount();
-  renderTotals();
+  renderCart();      // カートドロワーの中身もリセット
+  renderTotals();    // 合計金額もリセット
+  setShipping('pickup'); // お受け取り方法も初期化
   document.getElementById('f-name').value = '';
   document.getElementById('f-email').value = '';
   document.getElementById('f-tel').value = '';
