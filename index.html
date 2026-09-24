@@ -183,6 +183,15 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
   background:#111;color:#fff;padding:11px 24px;font-size:11px;letter-spacing:.1em;
   opacity:0;transition:.25s;z-index:500;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Scroll to info button */
+.scroll-to-info{position:fixed;bottom:80px;right:18px;z-index:490;
+  background:#111;color:#fff;border:none;cursor:pointer;
+  padding:10px 14px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  font-family:"DM Sans",sans-serif;line-height:1.4;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,.18);transition:.25s;
+  opacity:0;pointer-events:none;transform:translateY(8px)}
+.scroll-to-info.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+@media(max-width:480px){.scroll-to-info{bottom:72px;right:14px;padding:10px 12px}}
 
 /* Qty control */
 .qty-ctrl{display:flex;align-items:center;gap:6px}
@@ -255,7 +264,7 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
   </button>
 </header>
 
-<div class="section">
+<div class="section" id="customer-info-section">
   <div class="section-title serif">お客様情報</div>
   <div class="card">
     <div class="form-grid">
@@ -417,6 +426,9 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="scroll-to-info" id="scroll-to-info-btn" onclick="scrollToCustomerInfo()">
+  お客様情報へ<br>↑
+</button>
 
 <!-- Print overlay (in-page, works on mobile) -->
 <div class="print-overlay" id="print-overlay">
@@ -1174,6 +1186,31 @@ function showToast(msg) {
   el.classList.add('show');
   setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
+
+// ===== SCROLL TO CUSTOMER INFO =====
+function scrollToCustomerInfo() {
+  var target = document.getElementById('customer-info-section');
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function(){
+      var nameInput = document.getElementById('f-name');
+      if (nameInput) nameInput.focus();
+    }, 600);
+  }
+}
+(function() {
+  var btn = document.getElementById('scroll-to-info-btn');
+  var productsSection = document.querySelector('.products-section');
+  if (!btn || !productsSection) return;
+  window.addEventListener('scroll', function() {
+    var rect = productsSection.getBoundingClientRect();
+    if (rect.top < 0) {
+      btn.classList.add('show');
+    } else {
+      btn.classList.remove('show');
+    }
+  }, { passive: true });
+})();
 
 // ===== INIT =====
 try {
