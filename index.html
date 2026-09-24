@@ -1111,13 +1111,7 @@ function renderOrdersPanelSheet(rows) {
   }).join('');
 }
 
-function markPaidSheet(id) {
-  if (!confirm('入金済み確認完了にしますか？\nカートとフォームもリセットされます。')) return;
-  var btn = document.getElementById('mpb-' + id);
-  if (btn) { btn.disabled = true; btn.textContent = '更新中...'; }
-  updateOrderStatus(id, 'paid');
-  showToast('入金済みに更新しました');
-  // カート・フォームをリセット
+function resetCartAndForm() {
   cart = [];
   updateCartCount();
   renderTotals();
@@ -1127,10 +1121,21 @@ function markPaidSheet(id) {
   document.getElementById('f-address').value = '';
   document.getElementById('f-note').value = '';
   if (document.getElementById('f-receipt')) document.getElementById('f-receipt').checked = false;
-  document.getElementById('customer-order-btn').style.display = '';
-  document.getElementById('customer-order-btn').disabled = true;
-  document.getElementById('customer-order-done').style.display = 'none';
-  document.getElementById('customer-order-note').style.display = '';
+  var cobtn = document.getElementById('customer-order-btn');
+  if (cobtn) { cobtn.style.display = ''; cobtn.disabled = true; }
+  var codone = document.getElementById('customer-order-done');
+  if (codone) codone.style.display = 'none';
+  var conote = document.getElementById('customer-order-note');
+  if (conote) conote.style.display = '';
+}
+
+function markPaidSheet(id) {
+  if (!confirm('入金済み確認完了にしますか？\nカートとフォームもリセットされます。')) return;
+  var btn = document.getElementById('mpb-' + id);
+  if (btn) { btn.disabled = true; btn.textContent = '更新中...'; }
+  updateOrderStatus(id, 'paid');
+  showToast('入金済みに更新しました');
+  resetCartAndForm();
   setTimeout(function() { fetchOrdersFromSheet(); }, 3000);
 }
 
@@ -1181,9 +1186,11 @@ function renderOrdersPanel(orders) {
 }
 
 function markPaidFromPanel(id) {
+  if (!confirm('入金済み確認完了にしますか？\nカートとフォームもリセットされます。')) return;
   updateOrderStatus(id, 'paid');
   renderOrdersPanel(loadOrders());
   showToast('入金済みに更新しました');
+  resetCartAndForm();
 }
 
 function deleteOrderFromPanel(id) {
