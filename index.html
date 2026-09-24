@@ -273,7 +273,7 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
       </div>
       <div class="form-row delivery-note">
         <label class="form-label">希望納期について</label>
-        <div class="delivery-note-main">ご注文より 1.5〜2ヶ月後のお届け</div>
+        <div class="delivery-note-main">ご注文よりおおよそ２ヶ月後のお届け</div>
         <div class="delivery-note-sub">※ 商品によって前後する場合がございます</div>
       </div>
       <div class="form-row form-full">
@@ -292,15 +292,23 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
   <div class="section-title serif">商品を選ぶ</div>
   <div class="filter-bar">
     <span class="filter-label">ブランド</span>
-    <button class="filter-btn active" onclick="setBrand('all',this)">すべて</button>
-    <button class="filter-btn" onclick="setBrand('JOCALIS',this)">JOCALIS</button>
-    <button class="filter-btn" onclick="setBrand('ars',this)">ars</button>
+    <button class="filter-btn active" data-group="brand" onclick="setBrand('all',this)">すべて</button>
+    <button class="filter-btn" data-group="brand" onclick="setBrand('JOCALIS',this)">JOCALIS</button>
+    <button class="filter-btn" data-group="brand" onclick="setBrand('ars',this)">ars</button>
     <div class="filter-sep" style="display:block"></div>
     <span class="filter-label">シーズン</span>
-    <button class="filter-btn active" onclick="setSeason('all',this)">すべて</button>
-    <button class="filter-btn" onclick="setSeason('27SS',this)">27SS</button>
-    <button class="filter-btn" onclick="setSeason('26SS',this)">26SS</button>
-    <button class="filter-btn" onclick="setSeason('25AW',this)">25AW</button>
+    <button class="filter-btn active" data-group="season" onclick="setSeason('all',this)">すべて</button>
+    <button class="filter-btn" data-group="season" onclick="setSeason('27SS',this)">27SS</button>
+    <button class="filter-btn" data-group="season" onclick="setSeason('26SS',this)">26SS</button>
+    <button class="filter-btn" data-group="season" onclick="setSeason('25AW',this)">25AW</button>
+    <div class="filter-sep" style="display:block"></div>
+    <span class="filter-label">カテゴリー</span>
+    <button class="filter-btn active" data-group="type" onclick="setType('all',this)">すべて</button>
+    <button class="filter-btn" data-group="type" onclick="setType('リング',this)">リング</button>
+    <button class="filter-btn" data-group="type" onclick="setType('ネックレス',this)">ネックレス</button>
+    <button class="filter-btn" data-group="type" onclick="setType('ブレス',this)">ブレス</button>
+    <button class="filter-btn" data-group="type" onclick="setType('ピアス',this)">ピアス</button>
+    <button class="filter-btn" data-group="type" onclick="setType('オブジェ',this)">オブジェ</button>
   </div>
   <div class="product-grid" id="product-grid"></div>
 </div>
@@ -340,10 +348,13 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
         disabled>
         注文を確定する
       </button>
+      <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.7;letter-spacing:.04em">
+        注文確定後、スタッフにお声がけいただき、クレジット決済をクレジット端末でお済ませください。
+      </div>
       <div id="customer-order-done" style="display:none;text-align:center;padding:16px 0;
         font-size:11px;letter-spacing:.1em;color:#1a6e3c">
         ✓ ご注文を受け付けました<br>
-        <span style="font-size:10px;color:var(--muted)">スタッフが確認後ご連絡いたします</span>
+        <span style="font-size:10px;color:var(--muted)">スタッフにお声がけいただきクレジット決済をお済ませください</span>
       </div>
     </div>
 
@@ -426,6 +437,7 @@ var PRODUCTS = [{"id":"j27-musubi-1","brand":"JOCALIS","season":"27SS","collecti
 // Filter state
 var brandFilter = 'all';
 var seasonFilter = 'all';
+var typeFilter = 'all';
 
 // Cart
 var cart = []; // [{product, size, price, qty}]
@@ -448,24 +460,21 @@ function getPrice(p, size) {
 // ===== FILTERS =====
 function setBrand(val, btn) {
   brandFilter = val;
-  document.querySelectorAll('.filter-bar .filter-btn').forEach(function(b) {
-    var t = b.textContent; if (t==='すべて'||t==='JOCALIS'||t==='ars'||t==='all') {
-      // only reset brand buttons - detect by position
-    }
-  });
-  // reset brand buttons
-  var allBtns = document.querySelectorAll('.filter-bar .filter-btn');
-  var brandBtns = [allBtns[0], allBtns[1], allBtns[2]];
-  brandBtns.forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('[data-group="brand"]').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderGrid();
 }
 
 function setSeason(val, btn) {
   seasonFilter = val;
-  var allBtns = document.querySelectorAll('.filter-bar .filter-btn');
-  var seasonBtns = [allBtns[3], allBtns[4], allBtns[5], allBtns[6]];
-  seasonBtns.forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('[data-group="season"]').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function setType(val, btn) {
+  typeFilter = val;
+  document.querySelectorAll('[data-group="type"]').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderGrid();
 }
@@ -477,6 +486,7 @@ function renderGrid() {
   var products = PRODUCTS.filter(function(p) {
     if (brandFilter !== 'all' && p.brand !== brandFilter) return false;
     if (seasonFilter !== 'all' && p.season !== seasonFilter) return false;
+    if (typeFilter !== 'all' && p.type !== typeFilter) return false;
     return true;
   });
 
