@@ -331,6 +331,22 @@ h1,h2,.serif{font-family:"Cormorant Garamond",serif}
     <div class="total-rows" id="cart-totals"></div>
     <button class="print-btn" id="print-btn" onclick="printSheet()" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 保存・印刷する</button>
 
+    <!-- Customer Order Button -->
+    <div id="customer-order-area" style="margin-top:12px">
+      <button id="customer-order-btn" onclick="customerOrder()"
+        style="width:100%;padding:14px;border:2px solid #111;background:#111;color:#fff;
+        font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+        font-family:'DM Sans',sans-serif;touch-action:manipulation"
+        disabled>
+        注文を確定する
+      </button>
+      <div id="customer-order-done" style="display:none;text-align:center;padding:16px 0;
+        font-size:11px;letter-spacing:.1em;color:#1a6e3c">
+        ✓ ご注文を受け付けました<br>
+        <span style="font-size:10px;color:var(--muted)">スタッフが確認後ご連絡いたします</span>
+      </div>
+    </div>
+
     <!-- Admin Section -->
     <div id="admin-section" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
       <div id="admin-lock" style="text-align:center">
@@ -609,6 +625,7 @@ function renderCart() {
     document.getElementById('cart-totals').innerHTML = '';
     document.getElementById('print-btn').disabled = true;
     if (adminUnlocked) { var cb=document.getElementById('checkout-btn'); if(cb) cb.disabled=true; }
+    var cob = document.getElementById('customer-order-btn'); if(cob) cob.disabled=true;
     return;
   }
 
@@ -636,6 +653,7 @@ function renderCart() {
   renderTotals();
   document.getElementById('print-btn').disabled = false;
   if (adminUnlocked) updateAdminBtn();
+  updateCustomerOrderBtn();
 }
 
 function renderTotals() {
@@ -791,6 +809,57 @@ function updateAdminBtn() {
   var btn = document.getElementById('checkout-btn');
   if (!btn) return;
   btn.disabled = cart.length === 0 || !document.getElementById('f-name').value.trim();
+}
+
+function updateCustomerOrderBtn() {
+  var btn = document.getElementById('customer-order-btn');
+  var done = document.getElementById('customer-order-done');
+  if (!btn || done.style.display !== 'none') return;
+  btn.disabled = cart.length === 0;
+}
+
+// ===== お客様用 注文確定 =====
+function customerOrder() {
+  var name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast('お名前をご入力ください'); return; }
+  if (cart.length === 0) { showToast('商品を追加してください'); return; }
+  if (!confirm('注文内容を確定しますか？\n\n後ほどスタッフよりご連絡いたします。')) return;
+
+  var retailTotal = cart.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
+  var disc = Math.round(retailTotal * 0.3);
+  var pay = retailTotal - disc;
+  var tax = Math.round(pay * 0.1);
+  var shipFee = (shipping === 'delivery' || shipping === 'cod') ? 650 : 0;
+  var codFee = shipping === 'cod' ? 660 : 0;
+  var finalPay = pay + tax + shipFee + codFee;
+  var shippingLabel = shipping === 'pickup' ? '店頭お持ち帰り' : (shipping === 'cod' ? '代引き配送' : '決済後配送');
+
+  var order = {
+    id: 'ord-' + Date.now(),
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+    name: name,
+    email: document.getElementById('f-email').value.trim(),
+    tel: document.getElementById('f-tel').value.trim(),
+    address: document.getElementById('f-address').value.trim(),
+    note: document.getElementById('f-note').value.trim(),
+    shipping: shippingLabel,
+    items: cart.map(function(i){ return {name:i.name, size:i.size, qty:i.qty, price:i.price}; }),
+    retailTotal: retailTotal,
+    discount: disc,
+    subtotal: pay,
+    tax: tax,
+    shipFee: shipFee,
+    codFee: codFee,
+    total: finalPay
+  };
+
+  saveOrder(order);
+
+  // ボタンを非表示にして完了メッセージを表示
+  document.getElementById('customer-order-btn').style.display = 'none';
+  document.getElementById('customer-order-done').style.display = 'block';
+  showToast('ご注文を受け付けました');
 }
 
 var currentOrderId = null;
