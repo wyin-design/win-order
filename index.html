@@ -779,11 +779,13 @@ function printSheet() {
         '<div style="font-family:Georgia,serif;font-size:15px;font-weight:300;color:#111">' + dateStr + '</div>' +
       '</div>' +
     '</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #e0e0e0;margin-bottom:24px">' +
-      '<div style="padding:12px 16px;border-right:1px solid #e0e0e0"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:5px">お名前</label><span style="font-size:13px">' + name + ' 様</span></div>' +
-      (email ? '<div style="padding:12px 16px;border-right:1px solid #e0e0e0"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:5px">Email</label><span style="font-size:12px">' + email + '</span></div>' : '<div style="padding:12px 16px;border-right:1px solid #e0e0e0"></div>') +
-      (tel ? '<div style="padding:12px 16px"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:5px">Tel</label><span style="font-size:13px">' + tel + '</span></div>' : '<div style="padding:12px 16px"></div>') +
-      (address ? '<div style="padding:12px 16px;border-top:1px solid #e0e0e0;grid-column:1/-1"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:5px">お届け先</label><span style="font-size:13px">' + address + '</span></div>' : '') +
+    '<div style="border:1px solid #e0e0e0;margin-bottom:24px">' +
+      '<div style="padding:14px 16px;border-bottom:1px solid #e0e0e0"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px">お名前</label><span style="font-size:16px;font-weight:400;letter-spacing:.06em;white-space:nowrap">' + name + ' 様</span></div>' +
+      '<div style="display:flex;flex-wrap:wrap">' +
+        (email ? '<div style="padding:12px 16px;flex:1;min-width:0;border-right:1px solid #e0e0e0"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px">Email</label><span style="font-size:12px;word-break:break-all">' + email + '</span></div>' : '') +
+        (tel ? '<div style="padding:12px 16px;min-width:120px"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px">Tel</label><span style="font-size:13px;white-space:nowrap">' + tel + '</span></div>' : '') +
+      '</div>' +
+      (address ? '<div style="padding:12px 16px;border-top:1px solid #e0e0e0"><label style="font-size:9px;color:#999;letter-spacing:.16em;text-transform:uppercase;display:block;margin-bottom:4px">お届け先</label><span style="font-size:13px">' + address + '</span></div>' : '') +
     '</div>' +
     '<table style="width:100%;border-collapse:collapse;margin-bottom:24px">' +
       '<thead><tr style="border-bottom:1px solid #111">' +
